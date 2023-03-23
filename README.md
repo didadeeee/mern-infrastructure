@@ -429,6 +429,17 @@ Open 2 Terminals:
 - Express -> `node --watch server.js`
 - React -> `npm run dev`
 
+or you `npm install concurrently --save-dev` and change `package.json`
+
+for mac user
+```json
+    "dev": "concurrently 'vite' 'node --watch server.js'",
+```
+
+for windows user
+```json
+"dev": "concurrently \"node --watch server.js\" vite",
+```
 ## Proxy
 
 Vite proxy info at <https://vitejs.dev/config/server-options.html#server-proxy>
@@ -442,4 +453,57 @@ export default defineConfig({
     },
   },
 });
+```
+
+## Deployment
+
+setup github repo and connect to cyclic
+
+### Add startup script
+
+```json
+  "scripts": {
+    "start": "node server.js",
+  }
+```
+
+## IMPORTANT
+
+DO NOT SYNC UP THE CODE!!
+
+## Clean up vite
+
+main.jsx -> remove `index.css`  
+index.js(note) = main.jsx (vite) -> fix import for App after the move
+
+src, public folder, vite.config.js -> belongs to React
+every js file outside of src -> belongs to Express
+
+
+## dotenv
+npm install dotenv
+new-item .env
+npm install mongoose
+new-item config/database.js
+
+```dotenv
+DATABASE_URL=""
+```
+
+new-item crud-helper.js
+
+```js
+// Connect to the database
+require("dotenv").config();
+require("./config/database");
+
+// Require the Mongoose models
+// const User = require('./models/user');
+// const Item = require('./models/item');
+// const Category = require('./models/category');
+// const Order = require('./models/order');
+
+// Local variables will come in handy for holding retrieved documents
+let user, item, category, order;
+let users, items, categories, orders;
 ```
