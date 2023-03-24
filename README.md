@@ -374,6 +374,13 @@ change "type":"commonjs" in package.json
 
 after vite setup
 
+## Code the Skeleton Express App
+
+Instead we're going to code our own Express app from scratch because we won't need much middleware, etc. due to the fact that the Express backend simply needs to:
+
+- Deliver the production-ready index.html, which will in turn request the production-ready scripts, etc.
+- Respond to AJAX requests, performing any necessary CRUD, and finally respond with JSON.
+
 ```terminal
 git
 npm run build
@@ -411,13 +418,25 @@ Tree shaking - remove unused files
 
 In the future, all Express routes should start with "/api"
 
-In server.js, it's very important to have
+In server.js, it's very important to have the "Catch All" route to serve the index.html when any non-AJAX "API" request is received by the Express app [to send back the index.html page for all non-API/AJAX requests.]
+
+be sure to mount API or other routes before it!
 
 ```js
 app.get("/*", function (req, res) {
   res.sendFile(path.join(__dirname, "dist", "index.html"));
 });
 ```
+
+Now the "catch all" route will serve the index.html whenever:
+
+- A user types a path into the address bar and presses enter.
+- The user refreshes the browser.
+- A person clicks a link to the app provided via email, slacked, included on another web page, etc.
+
+Note:
+
+- The React app should use a "service/api" module to communicate with the backend's API routes via AJAX.
 
 whatever path eg. "/dashboard" will bring you back to index.html
 
@@ -432,17 +451,22 @@ Open 2 Terminals:
 or you `npm install concurrently --save-dev` and change `package.json`
 
 for mac user
+
 ```json
     "dev": "concurrently 'vite' 'node --watch server.js'",
 ```
 
 for windows user
+
 ```json
 "dev": "concurrently \"node --watch server.js\" vite",
 ```
+
 ## Proxy
 
 Vite proxy info at <https://vitejs.dev/config/server-options.html#server-proxy>
+
+in vite.config.js
 
 ```js
 export default defineConfig({
@@ -470,17 +494,35 @@ setup github repo and connect to cyclic
 ## IMPORTANT
 
 DO NOT SYNC UP THE CODE!!
+We will be using React Router 6 - https://reactrouter.com/en/main but not the new stuff in 6.4 (yet - wait till Unit 4) and also we will NOT be using React Router 5 (which is what most of the tutorials out there are).
+
+React Router: We will be using 6.0 - 6.3, not 5.x or 6.4 and above
+RR6: element = {newOrderPage}
+RR5: components = {newOrderPage}
 
 ## Clean up vite
 
-main.jsx -> remove `index.css`  
-index.js(note) = main.jsx (vite) -> fix import for App after the move
+App.js -> App.jsx
+main.jsx -> remove `index.css`
 
+index.js(note) = main.jsx (vite) -> fix import for App after the move
 src, public folder, vite.config.js -> belongs to React
 every js file outside of src -> belongs to Express
 
+Folders
+
+- src/pages: This folder will hold the "page-level" components that implement the app's main functionality. Page-level components are rendered for each client-side route. For example, in the past where we might have rendered a movies/show.ejs template for a GET /movies/:id route, we now might want to render a MovieDetailPage.jsx component when at the /movies/:id client-side route instead. We'll move the <App> component into the src/pages folder as well.
+
+- src/components: This folder will hold all other non-page-level components. These components may often be used/rendered by any number of other components.
+
+in main.jsx
+
+```js
+import App from "./pages/App/App";
+```
 
 ## dotenv
+
 npm install dotenv
 new-item .env
 npm install mongoose
@@ -488,6 +530,29 @@ new-item config/database.js
 
 ```dotenv
 DATABASE_URL=""
+```
+
+config/database.js
+
+```js
+const mongoose = require("mongoose");
+
+mongoose.connect(process.env.DATABASE_URL);
+
+const db = mongoose.connection;
+
+db.on("connected", function () {
+  console.log(`Connected to ${db.name} at ${db.host}:${db.port}`);
+});
+```
+
+in server.js
+
+```js
+require("dotenv").config();
+
+// Connect to the database
+require("./config/database");
 ```
 
 new-item crud-helper.js
@@ -507,3 +572,135 @@ require("./config/database");
 let user, item, category, order;
 let users, items, categories, orders;
 ```
+
+## Part 2
+
+create each pages in seperate folders in src/pages/
+
+## Add Browser Router
+
+if using react (web based)
+
+```terminal
+npm install react-router-dom
+```
+
+if using react native
+
+```terminal
+npm install react-router
+```
+
+to use current url to affect
+
+import and update main.js
+
+```js
+import { BrowserRouter } from "react-router-dom";
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
+  </React.StrictMode>
+);
+```
+
+## Styling
+
+### npm install framework
+
+#### Bootstrap & picocss
+
+in terminal
+
+```terminal
+npm install bootstrap@5.3.0-alpha1
+npm install @picocss/pico
+```
+
+on top of main.jsx
+
+```js
+import "@picocss/pico/css/pico.css";
+import "bootstrap/dist/css/bootstrap.css";
+```
+
+note: change class => className
+
+```js
+ <button type="button" className="btn btn-primary">
+```
+
+Pro: easy
+Cons: stuck with their style
+
+#### inline.css
+
+index.css
+write own css
+
+myStyle is on object like { backgroundColor: "yellow" }
+<style={myStyle}>
+
+Pro: individual and works
+Cons: not css
+
+#### CSS module
+
+https://vitejs.dev/guide/features.html#css-modules
+
+Pro: CSS and individual
+Con: ???
+
+import "index.css"
+https://vitejs.dev/guide/features.html#css-modules
+
+#### Component Toolkit
+
+https://bestofjs.org/projects?tags=component&tags=react
+
+Pro: React based
+Cons: Stuck with theme? Need know the underlying framework
+
+#### Tailwind
+
+https://tailwindcss.com/
+
+Pro: complete design system for css
+Cons: learn tailwind
+
+#### CSS in JS
+
+https://bestofjs.org/projects?tags=css-in-js
+
+Pro: CSS in JS
+Con: Complex
+
+## Class
+
+```js
+class Person {
+  constructor(name) {
+    this.name = name;
+  }
+}
+```
+
+React will write this part for us:
+
+```js
+const p = new Person("Simon");
+```
+
+in class component, remove "this"
+
+## Over the Weekend for Monday
+
+- Recap `register` for a user from Unit 2
+  - express hash
+  - write controller, route, model
+- Research & Decide on UI / CSS
+- Swap sessions wih JWT
+- Recap `fetch` - https://sei-42-materials.vercel.app/docs/unit2/wk05d03/4.3-consuming-3rd-party-apis

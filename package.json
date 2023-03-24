@@ -5,17 +5,20 @@
   "type": "commonjs",
   "scripts": {
     "start": "node server.js",
-    "dev": "concurrently \"node --watch server.js\" vite",
+    "both": "concurrently \"node --watch server.js\" vite",
+    "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@picocss/pico": "^1.5.7",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "mongoose": "^7.0.2",
     "morgan": "^1.10.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-router-dom": "^6.9.0",
     "serve-favicon": "^2.5.0"
   },
   "devDependencies": {
