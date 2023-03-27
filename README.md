@@ -243,6 +243,51 @@ function ContactsTable(props) {
 - Dates
 - Utils like lodash
 
+## Working with git as a team
+
+- try not to work on the same files
+
+1 main line -> `main` branch -> auto deploy by cyclic.sh
+Each team member create their own branch, example `simon`
+
+develop the features (like Login) on your own branch - `simon`
+commit changes -> edit the file -> git add -A -> git commit -m 'test commit'
+get updated changes - `git pull`
+
+When feature is done & want to share -> goto `main` and `git pull` && `git merge simon`
+When you want to see other people features in your branch -> goto `simon` and `git merge main`
+
+#### Practice
+
+```terminal
+// get the latest update
+git pull
+// create a new branch
+git checkout -b ida
+// check branch
+git branch
+// switch branch
+git switch main
+git switch ida
+// on the branch (git branch ida), check if ur features work with the main branch
+git merge main
+// push ur updates to the main branch (git branch main)
+git merge ida
+//
+```
+
+pushing your updates to ur own branch
+
+```terminal
+// make sure you are on your own branch
+git switch ida
+git add
+git commit
+git push origin ida
+```
+
+review the pull request on github and merge
+
 ## Gotcha with state
 
 - Replace the state NOT mutate the state
@@ -468,12 +513,31 @@ Vite proxy info at <https://vitejs.dev/config/server-options.html#server-proxy>
 
 in vite.config.js
 
+for mac os
+
 ```js
 export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
       "/api": "http://localhost:3000",
+    },
+  },
+});
+```
+
+for windows
+
+```js
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
+
+// https://vitejs.dev/config/
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    proxy: {
+      "/api": "http://127.0.0.1:3000/",
     },
   },
 });
@@ -704,3 +768,201 @@ in class component, remove "this"
 - Research & Decide on UI / CSS
 - Swap sessions wih JWT
 - Recap `fetch` - https://sei-42-materials.vercel.app/docs/unit2/wk05d03/4.3-consuming-3rd-party-apis
+- Do the Movie HW as a group
+
+## Over the weekend II
+
+Remember to do this
+
+- Recap `register` for a user from Unit 2
+  - express hash
+  - write controller, route, model
+- Research & Decide on UI / CSS
+- Swap sessions wih JWT
+- Recap `fetch` - https://sei-42-materials.vercel.app/docs/unit2/wk05d03/4.3-consuming-3rd-party-apis
+  - async and await
+- Do the Movie HW as an (optional) group
+
+## React Communication with Express
+
+React ---(request)---> Express
+
+Express ---(response)---> React
+
+Signup -> New User -> CRUD -> Create - POST /api/users/
+
+React ---(request - fetch)---> Express
+React -> onSubmit -> collect form data -> submit
+
+instead of the express ejs way
+
+```js
+<form action="/users/" method="post">
+```
+
+this is the react way to fetch post request + url
+
+```js
+fetch("/api/users", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify(data),
+})
+  .then((response) => response.json())
+  .then((data) => console.log(data));
+```
+
+### Express - Create User
+
+route - /api/users POST
+controller - UserController.create
+
+```js
+const create = async (req, res, next) => {
+  req.body; // info in the POST
+  // no validation!!
+  if (req.body.name === "") {
+    res.json({}); // goes back as data for fetch
+    return;
+  }
+  // no hash -> bcrypt
+  await User.create(req.body);
+  res.json({});
+};
+```
+
+model - User -> name, password, email, confirm(XX)
+
+## Signup endings
+
+Correct -> See all orders
+Wrong -> Error message
+
+Express ---(response)---> React
+Express -> response -> never redirect(), never render(), always send json()
+
+## Setup Router
+
+mkdir routes -> new-item userRouter.js
+
+```js
+const express = require("express");
+const router = express.Router();
+// starting from api - due to server.js setup
+router.post("/", (req, res) => {
+  res.json({ body: req.body });
+});
+
+module.exports = router;
+```
+
+in server.js, move out the api path, below config/database.js
+
+```js
+const userRouter = require("./routes/usersRouter");
+```
+
+above app.get("/\*")
+
+```js
+app.use("/api/users", userRouter);
+
+app.get("/*", function (req, res) {
+  res.sendFile(path.join(__dirname, "dist", "index.html"));
+});
+```
+
+## Setup Model
+
+in User.js
+
+```js
+const mongoose = require("mongoose");
+const { Schema } = mongoose;
+
+const userSchema = new Schema({
+  name: { type: String, required: true },
+  email: {
+    type: String,
+    unique: true,
+    trim: true,
+    lowercase: true,
+    required: true,
+  },
+  password: {
+    type: String,
+    trim: true,
+    minLength: 3,
+    required: true,
+  },
+});
+
+module.exports = mongoose.model("User", userSchema);
+```
+
+## Setup Controller
+
+```js
+const User = require("../models/User");
+
+const create = (req, res) => {
+  res.json({ body2: req.body });
+};
+
+module.exports = {
+  create,
+};
+```
+
+## Hashing
+
+```terminal
+npm i bcrypt
+```
+
+in models/User.js [do not use arrow function due to this]
+
+```js
+const bcrypt = require("bcrypt");
+const SALT_ROUNDS = 10;
+
+userSchema.pre("save", async function (next) {
+  // 'this' is the user doc
+  if (!this.isModified("password")) return next();
+  // update the password with the computed hash
+  this.password = await bcrypt.hash(this.password, SALT_ROUNDS);
+  return next();
+});
+```
+
+## To Navigate
+
+```js
+import { useNavigate } from "react-router-dom";
+
+const [error, setError] = useState("No Error");
+const navigate = useNavigate();
+
+const handleSubmit = async (event) => {
+  event.preventDefault();
+  // window.alert(JSON.stringify(state));
+  try {
+    const response = await fetch("/api/users", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(state),
+    });
+    if (!response.ok) {
+      throw new Error("Network error");
+    }
+    const data = await response.json();
+    navigate("/orders");
+  } catch (error) {
+    setError(error.error);
+  }
+};
+```

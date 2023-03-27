@@ -7,11 +7,13 @@
     "start": "node server.js",
     "both": "concurrently \"node --watch server.js\" vite",
     "dev": "vite",
+    "express:dev": "node --watch server.js",
     "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
     "@picocss/pico": "^1.5.7",
+    "bcrypt": "^5.1.0",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "mongoose": "^7.0.2",

@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-export default function FSignUpForm() {
+export default function FSignUpForm({ setUser }) {
   //? const [name, setName] = useState("")
   const [state, setState] = useState({
     name: "",
@@ -8,12 +9,31 @@ export default function FSignUpForm() {
     password: "",
     confirm: "",
   });
+  const [error, setError] = useState("No Error");
+  const navigate = useNavigate();
 
   const disable = state.password !== state.confirm;
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    window.alert(JSON.stringify(state));
+    // window.alert(JSON.stringify(state));
+    try {
+      const response = await fetch("/api/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(state),
+      });
+      if (!response.ok) {
+        throw new Error("Network error");
+      }
+      const data = await response.json();
+      setUser(data);
+      navigate("/orders");
+    } catch (error) {
+      setError(error.error);
+    }
   };
 
   const handleChange = (event) => {
@@ -27,6 +47,7 @@ export default function FSignUpForm() {
     <div>
       <div className="form-container">
         <form autoComplete="off" onSubmit={handleSubmit}>
+          {error}
           <label>Name</label>
           <input
             type="text"
