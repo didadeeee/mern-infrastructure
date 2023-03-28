@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { getUser, signUp } from "../../utilities/users-service";
 
 export default function FSignUpForm({ setUser }) {
   //? const [name, setName] = useState("")
@@ -16,23 +17,12 @@ export default function FSignUpForm({ setUser }) {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    // window.alert(JSON.stringify(state));
     try {
-      const response = await fetch("/api/users", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(state),
-      });
-      if (!response.ok) {
-        throw new Error("Network error");
-      }
-      const data = await response.json();
-      setUser(data);
+      await signUp(state);
+      setUser(getUser());
       navigate("/orders");
     } catch (error) {
-      setError(error.error);
+      setError(error.message);
     }
   };
 

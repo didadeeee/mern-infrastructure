@@ -966,3 +966,119 @@ const handleSubmit = async (event) => {
   }
 };
 ```
+
+on app, we can't use cookies, and there might be differents servers serving the client, so session for authorisation is not that applicable.
+
+### JWT
+
+https://jwt.io/
+Libraries - working with backend, so node.js
+
+```terminal
+npm install jsonwebtoken
+```
+
+Header (cannot be changed)
+Payload (can insert any data)
+
+How to prevent people hacking the encoded data?
+with Verify Signature, it uses the header and payload data and produce into a unique data
+[your-256-bit-secret]
+
+encoding vs encryption?
+encode and decode without a key
+
+encoded
+
+- has a fixed formula to convert the data to url (replace space, ', / with some other strings)
+- not a secret
+
+Client --> /login POST (body) --> Server
+Server (sign jwt) --> jwt --> Client
+
+Client --> /secret (manually send JWT along)
+Server (verify JWT?) -> Client
+
+in userController, setup jwt and expiry
+
+```js
+const User = require("../models/User");
+const jwt = require("jsonwebtoken");
+
+const JWT_SECRET = process.env.JWT_SERCET;
+
+const create = async (req, res) => {
+  const { password } = req.body;
+  if (password.length < 3) {
+    return res.status(400).json({ message: "password too short" });
+  }
+
+  try {
+    const user = await User.create(req.body);
+    const payload = { user };
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: 60 });
+    res.status(201).json(token);
+  } catch (error) {
+    res.status(500).json(error);
+  }
+};
+
+module.exports = {
+  create,
+};
+```
+
+in dotenv, make sure no "" & no space, restart server
+
+```js
+JWT_SECRET=;
+```
+
+in SignUpForm, in handleSubmit
+
+```js
+localStorage.setItem("token", data);
+// setUser(data);
+// navigate("/orders");
+```
+
+inside src
+mkdir utilities
+new-item users-service.js
+
+```js
+export function getToken() {
+  // getItem returns null if there's no string
+  const token = localStorage.getItem("token");
+  if (!token) return null;
+  // Obtain the payload of the token
+  const payload = JSON.parse(window.atob(token.split(".")[1]));
+  // A JWT's exp is expressed in seconds, not milliseconds, so convert
+  if (payload.exp < Date.now() / 1000) {
+    // Token has expired - remove it from localStorage
+    localStorage.removeItem("token");
+    return null;
+  }
+  return token;
+}
+
+export function getUser() {
+  const token = getToken();
+  // If there's a token, return the user in the payload, otherwise return null
+  return token ? JSON.parse(windowatob(token.split(".")[1])).user : null;
+}
+```
+
+server.js
+
+```js
+const jwt = require("jsonwebtoken");
+
+app.get("/api/secret", (req, res) => {
+  const authorization = req.headers.authorization;
+  const token = authorization.split(" ")[1];
+  return res.json(token);
+});
+```
+
+https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Authorization

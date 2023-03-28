@@ -4,6 +4,7 @@ const logger = require("morgan");
 require("dotenv").config();
 require("./config/database");
 const userRouter = require("./routes/userRouter");
+const jwt = require("jsonwebtoken");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -16,6 +17,24 @@ app.use(express.static(path.join(__dirname, "dist")));
 app.get("/api", (req, res) => {
   res.json({ msg: "Hi" });
 });
+
+const isLoggedIn = (req, res, next) => {
+  const authorization = req.headers.authorization;
+  const token = authorization.split(" ")[1];
+  const decode = jwt.verify(token, process.env.JWT_SECRET);
+  if (decode) {
+    res.locals.user = decode.user;
+    next();
+  } else {
+    res.status(403).json({ message: "sorry" });
+  }
+};
+
+app.get("/api/secret", isLoggedIn, (req, res) => {
+  console.log(res.locals.user);
+  res.json({ message: "secret" });
+});
+
 
 app.use("/api/users", userRouter);
 
